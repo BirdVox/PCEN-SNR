@@ -1,0 +1,37 @@
+from scipy import signal
+# input : y - the signal, sr - sample rate
+# output : start_times - vector of start times of the sound events
+#          end_time - vector of end times of the sound events            
+def detect_activity(y, sr,
+        n_mels=128, fmin=1000, fmax=11025, hop_length=512,
+        gain=0.8, bias=10, power=0.25, pcen_time_constant=0.06, eps=1e-06,
+        medfilt_time_constant=1, normalized =true,
+        peak_threshold=0.45, activity_threshold=0.2):
+    # 1. compute mel-frequency spectrogram
+    # (call librosa melspec)
+    melspec = librosa.feature.melspectrogram(y, sr=sr, fmin=fmin, fmax=fmax, n_mels=n_mels)
+    logmelspec = librosa.power_to_db(melspec)
+    
+    # 2. compute PCEN
+    # (call librosa PCEN)
+    pcen = librosa.core.pcen(melspec, sr=sr,
+    gain=gain, bias=bias, power=power, time_constant=pcen_time_constant, eps=eps)
+    
+    # 3. compute PCEN-SNR detection function
+    # (copy-paste from Vincent's notebook)
+    pcen_snr = np.max(pcen,axis=0) - np.min(pcen,axis=0)
+    pcen_snr = librosa.power_to_db(pcen_snr / np.median(pcen_snr))
+    if normalized == true:
+        pcen_snr = pcen_snr / np.max(pcen_snr)
+    median_pcen_snr = signal.medfilt(pcen_snr, kernel_size=medfilt_time_constant)
+    
+    # 4. extract active segments
+    # (copy-paste from Natalie's notebooks)
+    activity, start, end = VAD(median_pcen_snr,peak_threshold,activity_threshold)
+    print(start)
+    print(end)
+    # 5. convert indices to seconds
+    start_times = np.round(np.array(start) * hop_length / sr, 3)
+    end_times = np.round(np.array(end) * hop_length / sr, 3)
+    
+    return start_times, end_times
