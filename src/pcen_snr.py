@@ -74,12 +74,14 @@ def detect_activity(y, sr,
     """
     # 1. Compute mel-frequency spectrogram
     melspec = librosa.feature.melspectrogram(
-        y, sr=sr, fmin=fmin, fmax=fmax, n_mels=n_mels)
+        y, sr=sr, fmin=fmin, fmax=fmax, hop_length=hop_length,
+        n_mels=n_mels)
     logmelspec = librosa.power_to_db(melspec)
     
     # 2. Compute per-channel energy normalization (PCEN-SNR)
     pcen = librosa.core.pcen(melspec, sr=sr, gain=gain, bias=bias,
-        power=power, time_constant=pcen_time_constant, eps=eps)
+        power=power, hop_length=hop_length,
+        time_constant=pcen_time_constant, eps=eps)
     
     # 3. compute PCEN-SNR detection function
     pcen_snr = np.max(pcen,axis=0) - np.min(pcen,axis=0)
@@ -89,7 +91,8 @@ def detect_activity(y, sr,
         
     # 4. Apply median filtering.
     if medfilt_time_constant is not None:
-        kernel_size = 1 + 2 * round(medfilt_time_constant * sr - 0.5)
+        medfilt_hops = medfilt_time_constant * sr / hop_length
+        kernel_size = max(1, 1 + 2 * round(medfilt_hops - 0.5))
         pcen_snr = scipy.signal.medfilt(pcen_snr, kernel_size=kernel_size)
     
     # 5. Extract active segments.
