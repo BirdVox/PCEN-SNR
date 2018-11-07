@@ -1,9 +1,8 @@
-import scipy.signal
-import numpy as np
-import scipy 
-import matplotlib.pyplot as plt
 import librosa
 import librosa.display
+import numpy as np
+import scipy 
+import scipy.signal
 
 
 def detect_activity(y, sr,
