@@ -75,7 +75,6 @@ def detect_activity(y, sr,
     melspec = librosa.feature.melspectrogram(
         y, sr=sr, fmin=fmin, fmax=fmax, hop_length=hop_length,
         n_mels=n_mels)
-    logmelspec = librosa.power_to_db(melspec)
     
     # 2. Compute per-channel energy normalization (PCEN-SNR)
     pcen = librosa.core.pcen(melspec, sr=sr, gain=gain, bias=bias,
