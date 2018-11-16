@@ -89,7 +89,8 @@ def detect_activity(y, sr,
         
     # 4. Apply median filtering.
     if medfilt_time_constant is not None:
-        kernel_size = 1 + 2 * round(medfilt_time_constant * sr - 0.5)
+        medfilt_hops = medfilt_time_constant * sr / hop_length
+        kernel_size = max(1, 1 + 2 * round(medfilt_hops - 0.5))
         pcen_snr = scipy.signal.medfilt(pcen_snr, kernel_size=kernel_size)
     
     # 5. Extract active segments.
